@@ -1,0 +1,69 @@
+---
+title: "Inspect backend"
+output: github_document
+---
+
+```{r echo=FALSE}
+show_table <- print
+```
+
+If running interactively in RStudio, 
+
+- change `output` in the header of this markdown to `html_notebook` and
+- change to `eval=TRUE` below
+
+When knitting for pushing to GitHub,
+
+- change `output` in the header of this markdown to `github_document` and
+- change to `eval=FALSE` below
+
+```{r eval=TRUE}
+show_table <- knitr::kable
+```
+
+
+```{r}
+suppressPackageStartupMessages(library(magrittr))
+suppressPackageStartupMessages(library(tidyverse))
+```
+
+
+```{r}
+sqlite_file <- "~/Downloads/backend.sqlite"
+
+db <- DBI::dbConnect(RSQLite::SQLite(), sqlite_file, loadable.extensions = TRUE)
+
+DBI::dbListTables(db)
+```
+
+
+```{r}
+image <- 
+  tbl(src = db, "Myexpt_image") %>% collect() %>%
+  select(TableNumber, ImageNumber, matches("^Count"))
+
+infected <- 
+  tbl(src = db, "Myexpt_infected")  %>% collect()
+
+nuclei <- 
+  tbl(src = db, "Myexpt_nuclei")  %>% collect()
+```
+
+
+```{r}
+names(infected) %<>% str_replace_all("^Myexpt_infected", "Infected")
+
+names(nuclei) %<>% str_replace_all("^Myexpt_nuclei", "Nuclei")
+```
+
+
+```{r}
+ggplot(image, aes(Count_Infected, Count_Nuclei)) + geom_point()
+```
+```{r}
+nuclei %>% head() %>% show_table()
+```
+
+```{r}
+infected %>% head() %>% show_table()
+```
